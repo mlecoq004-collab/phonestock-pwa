@@ -1,1 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Gestion commerciale et comptabilité pour vendeurs de téléphones en Côte d'Ivoire">
+    
+    <title>PhoneStock CI</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/644/644458.png">
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overscroll-behavior: none; }
+        .hidden-section { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top: 4px solid #3B82F6; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Mobile optimizations */
+        .touch-manipulation { touch-action: manipulation; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Install button animation */
+        .install-prompt { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-gray-800 touch-manipulation">
+
+    <!-- INSTALL PROMPT (Android) -->
+    <div id="install-prompt" class="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-2xl z-50 hidden install-prompt safe-area-bottom">
+        <div class="flex items-center justify-between max-w-md mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-blue-600">
+                    <i class="fas fa-mobile-alt text-xl"></i>
+                </div>
+                <div>
+                    <p class="font-bold">Installer PhoneStock</p>
+                    <p class="text-xs text-blue-100">Accès rapide depuis l'écran d'accueil</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="app.hideInstallPrompt()" class="px-3 py-1 text-sm text-blue-200">Plus tard</button>
+                <button onclick="app.installApp()" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-bold text-sm shadow-lg">Installer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE CONFIG -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvH_-HmiV2Z9Zpw87WB26XZb_SF-mhwdU",
+            authDomain: "phonestock-ci.firebaseapp.com",
+            projectId: "phonestock-ci",
+            storageBucket: "phonestock-ci.firebasestorage.app",
+            messagingSenderId: "343118658066",
+            appId: "1:343118658066:web:576b774397170a0c9036cb",
+            measurementId: "G-8XHLK5QPWT"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log("Persistence offline:", err));
+    </script>
+
+    <!-- LOADING -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="spinner mb-4"></div>
+        <p class="text-gray-600 font-medium">Chargement...</p>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="notification" class="fixed top-4 right-4 z-50 hidden transform transition-all duration-300 translate-x-full">
+        <div class="bg-white border-l-4 border-blue-500 rounded-lg shadow-xl p-4 flex items-center gap-3 min-w-[300px]">
+            <div id="notif-icon" class="text-blue-500 text-xl"><i class="fas fa-info-circle"></i></div>
+            <div>
+                <h4 id="notif-title" class="font-semibold text-sm">Notification</h4>
+                <p id="notif-message" class="text-sm text-gray-600">Message</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN -->
+    <section id="login-section" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden fade-in">
+            <div class="bg-blue-600 p-6 text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl font-bold">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">PhoneStock CI</h1>
+                <p class="text-blue-100 text-sm mt-1">Version Cloud • PWA</p>
+                <div class="mt-2 inline-block px-3 py-1 bg-white/20 rounded-full text-xs text-white">
+                    <i class="fas fa-wifi mr-1"></i>Sync automatique
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                    <button onclick="app.setLoginMode('patron')" id="btn-patron" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-white shadow text-blue-600">
+                        <i class="fas fa-crown mr-2"></i>Patron
+                    </button>
+                    <button onclick="app.setLoginMode('vendeur')" id="btn-vendeur" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-user mr-2"></i>Vendeur
+                    </button>
+                </div>
+
+                <!-- Patron -->
+                <div id="login-patron" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="patron-email" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="email@boutique.ci">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                        <input type="password" id="patron-password" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="••••••••">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="app.loginPatron()" class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium shadow-lg">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                        </button>
+                        <button onclick="app.registerPatron()" class="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition font-medium">
+                            <i class="fas fa-plus mr-2"></i>Créer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Vendeur -->
+                <div id="login-vendeur" class="space-y-4 hidden">
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800">
+                        <i class="fas fa-qrcode mr-2"></i>Code fourni par le patron
+                    </div>
+                    <input type="text" id="vendeur-code" maxlength="6" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-center text-2xl tracking-widest font-mono uppercase" placeholder="ABC123">
+                    <input type="text" id="vendeur-name" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Votre nom">
+                    <input type="tel" id="vendeur-phone" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" placeholder="07 XX XX XX XX">
+                    <button onclick="app.loginVendeur()" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-medium shadow-lg">
+                        <i class="fas fa-store mr-2"></i>Rejoindre
+                    </button>
+                </div>
+            </div>
+            
+            <div class="px-6 pb-4 text-center text-xs text-gray-400">
+                <p>Appuyez sur <i class="fas fa-ellipsis-v mx-1"></i> puis "Ajouter à l'écran d'accueil"</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN APP -->
+    <div id="app-container" class="hidden min-h-screen flex flex-col md:flex-row">
+        
+        <!-- SIDEBAR -->
+        <aside class="bg-slate-900 text-white w-full md:w-64 flex-shrink-0 flex flex-col">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-store text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg">PhoneStock</h2>
+                        <p class="text-xs text-slate-400" id="user-role-display">-</p>
+                    </div>
+                </div>
+                <button onclick="app.toggleInstall()" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto p-2 space-y-1">
+                <div id="menu-patron" class="hidden space-y-1">
+                    <button onclick="app.showSection('dashboard')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 bg-slate-800">
+                        <i class="fas fa-chart-line w-5"></i> Dashboard
+                    </button>
+                    <button onclick="app.showSection('stock')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3">
+                        <i class="fas fa-boxes w-5"></i> Stock
+                    </button>
+                    <button onclick="app.showSection('vendeurs')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3">
+                        <i class="fas fa-users w-5"></i> Équipe
+                    </button>
+                    <button onclick="app.showSection('transferts')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3">
+                        <i class="fas fa-exchange-alt w-5"></i> Transferts
+                    </button>
+                </div>
+
+                <div id="menu-vendeur" class="hidden space-y-1">
+                    <button onclick="app.showSection('vendeur-dashboard')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 bg-slate-800">
+                        <i class="fas fa-home w-5"></i> Accueil
+                    </button>
+                    <button onclick="app.showSection('vendeur-stock')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3">
+                        <i class="fas fa-box w-5"></i> Stock
+                    </button>
+                    <button onclick="app.showSection('nouvelle-vente')" class="w-full text-left px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 transition flex items-center gap-3 shadow-lg">
+                        <i class="fas fa-cash-register w-5"></i> Vente
+                    </button>
+                </div>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800 safe-area-bottom">
+                <div class="bg-slate-800 rounded-lg p-3 mb-3 text-xs">
+                    <p class="text-slate-400" id="sidebar-username">-</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span class="text-slate-300">En ligne</span>
+                    </div>
+                </div>
+                <button onclick="app.logout()" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENT (Sections raccourcies pour l'exemple, utilisez votre code complet précédent) -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 pb-20">
+            
+            <!-- DASHBOARD -->
+            <section id="section-dashboard" class="p-4 fade-in">
+                <h1 class="text-xl font-bold text-gray-800 mb-4">Tableau de Bord</h1>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                        <p class="text-xs text-gray-600">CA Aujourd'hui</p>
+                        <h3 class="text-xl font-bold text-gray-800" id="ca-today">0 CFA</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                        <p class="text-xs text-gray-600">Stock</p>
+                        <h3 class="text-xl font-bold text-gray-800" id="stock-total">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-gray-800 mb-2 text-sm">Activité récente</h3>
+                    <div id="live-activity" class="space-y-2 text-sm"></div>
+                </div>
+            </section>
+
+            <!-- STOCK -->
+            <section id="section-stock" class="p-4 hidden-section">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-xl font-bold">Stock</h1>
+                    <button onclick="app.openModal('modal-nouveau-produit')" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left">Produit</th><th class="px-4 py-2">Prix</th></tr></thead>
+                        <tbody id="stock-table"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Plus de sections... (utilisez le code précédent) -->
+
+        </main>
+    </div>
+
+    <!-- MODAL PRODUIT -->
+    <div id="modal-nouveau-produit" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md p-6">
+            <h3 class="font-bold mb-4">Nouvel Article</h3>
+            <form onsubmit="app.addProduct(event)" class="space-y-3">
+                <input type="text" name="imei" placeholder="IMEI" required class="w-full border p-2 rounded">
+                <input type="text" name="modele" placeholder="Modèle" required class="w-full border p-2 rounded">
+                <input type="number" name="prixVente" placeholder="Prix vente" required class="w-full border p-2 rounded">
+                <div class="flex gap-2">
+                    <button type="button" onclick="app.closeModal('modal-nouveau-produit')" class="flex-1 border py-2 rounded">Annuler</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // SERVICE WORKER REGISTRATION
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => console.log('SW registered:', registration))
+                    .catch(error => console.log('SW registration failed:', error));
+            });
+        }
+
+        // APP LOGIC (Simplifié - utilisez votre code complet)
+        class PhoneStockApp {
+            constructor() {
+                this.currentUser = null;
+                this.userData = null;
+                this.deferredPrompt = null;
+                this.init();
+            }
+
+            init() {
+                // Capture install prompt
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.deferredPrompt = e;
+                    document.getElementById('install-prompt').classList.remove('hidden');
+                });
+
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        this.currentUser = user;
+                        await this.loadUserData();
+                        this.showApp();
+                    } else {
+                        this.showLogin();
+                    }
+                });
+            }
+
+            async loadUserData() {
+                const doc = await db.collection('users').doc(this.currentUser.uid).get();
+                this.userData = doc.exists ? doc.data() : {role: 'patron'};
+            }
+
+            showLogin() {
+                document.getElementById('app-container').classList.add('hidden');
+                document.getElementById('login-section').classList.remove('hidden');
+            }
+
+            showApp() {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                
+                const isPatron = this.userData.role === 'patron';
+                document.getElementById('menu-patron').classList.toggle('hidden', !isPatron);
+                document.getElementById('menu-vendeur').classList.toggle('hidden', isPatron);
+                document.getElementById('user-role-display').textContent = isPatron ? 'Patron' : 'Vendeur';
+                document.getElementById('sidebar-username').textContent = this.userData.nom || 'Utilisateur';
+                
+                if (isPatron) {
+                    this.setupPatronListeners();
+                    this.showSection('dashboard');
+                } else {
+                    this.setupVendeurListeners();
+                    this.showSection('vendeur-dashboard');
+                }
+            }
+
+            setupPatronListeners() {
+                db.collection('ventes').where('boutiqueId', '==', this.userData.boutiqueId || this.currentUser.uid)
+                    .onSnapshot(snap => {
+                        let ca = 0;
+                        snap.forEach(doc => ca += doc.data().montant || 0);
+                        document.getElementById('ca-today').textContent = ca.toLocaleString() + ' CFA';
+                    });
+                
+                db.collection('produits').where('boutiqueId', '==', this.userData.boutiqueId || this.currentUser.uid)
+                    .onSnapshot(snap => {
+                        document.getElementById('stock-total').textContent = snap.size;
+                        const tbody = document.getElementById('stock-table');
+                        tbody.innerHTML = snap.docs.map(d => {
+                            const p = d.data();
+                            return `<tr class="border-t"><td class="px-4 py-2">${p.modele}</td><td class="px-4 py-2 text-right">${p.prixVente} CFA</td></tr>`;
+                        }).join('');
+                    });
+            }
+
+            setupVendeurListeners() {}
+
+            async addProduct(e) {
+                e.preventDefault();
+                await db.collection('produits').add({
+                    boutiqueId: this.userData.boutiqueId || this.currentUser.uid,
+                    imei: e.target.imei.value,
+                    modele: e.target.modele.value,
+                    prixVente: parseInt(e.target.prixVente.value),
+                    createdAt: new Date()
+                });
+                this.closeModal('modal-nouveau-produit');
+                e.target.reset();
+            }
+
+            // Auth methods
+            setLoginMode(mode) {
+                document.getElementById('login-patron').classList.toggle('hidden', mode !== 'patron');
+                document.getElementById('login-vendeur').classList.toggle('hidden', mode !== 'vendeur');
+                document.getElementById('btn-patron').className = mode === 'patron' ? 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-white shadow text-blue-600' : 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-600';
+                document.getElementById('btn-vendeur').className = mode === 'vendeur' ? 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-white shadow text-orange-600' : 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-600';
+            }
+
+            async registerPatron() {
+                const email = document.getElementById('patron-email').value;
+                const password = document.getElementById('patron-password').value;
+                try {
+                    const cred = await auth.createUserWithEmailAndPassword(email, password);
+                    await db.collection('users').doc(cred.user.uid).set({
+                        role: 'patron', email, nom: email.split('@')[0], boutiqueId: cred.user.uid
+                    });
+                } catch(e) { alert(e.message); }
+            }
+
+            async loginPatron() {
+                try {
+                    await auth.signInWithEmailAndPassword(
+                        document.getElementById('patron-email').value,
+                        document.getElementById('patron-password').value
+                    );
+                } catch(e) { alert('Erreur connexion'); }
+            }
+
+            async loginVendeur() {
+                // Implémentez la logique vendeur ici
+                alert('Feature vendeur - utilisez le code complet précédent');
+            }
+
+            logout() { auth.signOut(); }
+
+            showSection(name) {
+                document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden-section'));
+                document.getElementById('section-' + name)?.classList.remove('hidden-section');
+            }
+
+            openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+            closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+            // PWA Install
+            hideInstallPrompt() {
+                document.getElementById('install-prompt').classList.add('hidden');
+            }
+
+            async installApp() {
+                if (!this.deferredPrompt) return;
+                this.deferredPrompt.prompt();
+                const { outcome } = await this.deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    this.hideInstallPrompt();
+                }
+                this.deferredPrompt = null;
+            }
+
+            toggleInstall() {
+                if (this.deferredPrompt) this.installApp();
+                else alert('Options > Ajouter à l\'écran d\'accueil');
+            }
+        }
+
+        const app = new PhoneStockApp();
+    </script>
+</body>
+</html>
