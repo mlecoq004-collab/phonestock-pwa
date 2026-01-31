@@ -1,1 +1,23 @@
-
+{
+  "name": "PhoneStock CI - Gestion Commerciale",
+  "short_name": "PhoneStock",
+  "description": "Gestion de stock et comptabilité pour vendeurs de téléphones",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/644/644458.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/256/644/644458.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
