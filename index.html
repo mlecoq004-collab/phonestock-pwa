@@ -2,116 +2,31 @@
 <html lang="fr" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Système expert de gestion commerciale et comptable pour marché des téléphones - Côte d'Ivoire">
+    <title>PhoneStock Expert CI</title>
     
-    <title>PhoneStock Expert CI | Comptabilité & Gestion</title>
-    
-    <!-- Tailwind + Custom Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        ci: {
-                            orange: '#FF6600',
-                            green: '#009639',
-                            blue: '#0047AB'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: #0f172a;
-            color: #e2e8f0;
-            overscroll-behavior: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .neon-glow {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-        }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        
-        .kpi-card {
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .status-online { 
-            background: #10b981;
-            box-shadow: 0 0 10px #10b981;
-        }
-        
-        .heatmap-positive { color: #34d399; }
-        .heatmap-negative { color: #f87171; }
-        
-        /* Comptabilité spécifique */
-        .compta-row:nth-child(even) { background: rgba(255,255,255,0.02); }
-        .compta-row:hover { background: rgba(59, 130, 246, 0.1); }
-        
-        .tva-badge { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .marge-badge { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .dettes-badge { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; overscroll-behavior: none; }
+        .glass-panel { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .kpi-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9)); border: 1px solid rgba(148, 163, 184, 0.1); }
+        .scan-line { animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+        .hidden-section { display: none !important; }
     </style>
 </head>
 <body class="antialiased min-h-screen bg-slate-900">
 
-    <!-- INDICATEUR SYNCHRONISATION -->
-    <div id="sync-bar" class="fixed top-0 left-0 right-0 h-1 bg-slate-800 z-50">
-        <div id="sync-progress" class="h-full bg-green-500 w-0 transition-all duration-500"></div>
-    </div>
-
-    <!-- CONFIG FIREBASE -->
+    <!-- FIREBASE CONFIG -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBvH_-HmiV2Z9Zpw87WB26XZb_SF-mhwdU",
@@ -121,559 +36,447 @@
             messagingSenderId: "343118658066",
             appId: "1:343118658066:web:576b774397170a0c9036cb"
         };
-        
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.firestore();
-        db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+        const auth = firebase.auth();
         db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
     </script>
 
-    <!-- LOGIN EXPERT -->
-    <div id="login-screen" class="fixed inset-0 z-40 bg-slate-900 flex items-center justify-center p-4 bg-[url('https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=1920&q=80')] bg-cover bg-center">
-        <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-xl"></div>
-        
-        <div class="relative w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl border border-slate-700/50">
+    <!-- LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-40 bg-slate-900 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-700">
             <div class="text-center mb-8">
                 <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
                     <i class="fas fa-chart-line text-3xl text-white"></i>
                 </div>
-                <h1 class="text-3xl font-bold mb-2 gradient-text">PhoneStock Expert</h1>
-                <p class="text-slate-400 text-sm">Comptabilité • Gestion • Analyses</p>
-                <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-300 border border-slate-700">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Système Expert CI
-                </div>
+                <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">PhoneStock Expert</h1>
             </div>
 
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-800/50 rounded-xl">
-                    <button onclick="app.switchMode('patron')" id="tab-patron" class="py-3 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-lg">
-                        <i class="fas fa-crown mr-2"></i>Patron
-                    </button>
-                    <button onclick="app.switchMode('vendeur')" id="tab-vendeur" class="py-3 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white">
-                        <i class="fas fa-user mr-2"></i>Vendeur
-                    </button>
-                </div>
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-800 rounded-xl mb-6">
+                <button onclick="app.switchMode('patron')" id="tab-patron" class="py-3 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-lg transition-all">Patron</button>
+                <button onclick="app.switchMode('vendeur')" id="tab-vendeur" class="py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all">Vendeur</button>
+            </div>
 
-                <form id="login-form" class="space-y-4" onsubmit="return false;">
-                    <div class="space-y-2">
-                        <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Email Professionnel</label>
-                        <div class="relative">
-                            <i class="fas fa-envelope absolute left-4 top-3.5 text-slate-500"></i>
-                            <input type="email" id="login-email" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" placeholder="patron@boutique.ci">
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Mot de passe</label>
-                        <div class="relative">
-                            <i class="fas fa-lock absolute left-4 top-3.5 text-slate-500"></i>
-                            <input type="password" id="login-password" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" placeholder="••••••••">
-                        </div>
-                    </div>
+            <div id="form-patron" class="space-y-4">
+                <input type="email" id="login-email" placeholder="email@boutique.ci" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition-all">
+                <input type="password" id="login-password" placeholder="Mot de passe" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition-all">
+                <button onclick="app.handleAuth()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/25 transition-all">Connexion</button>
+                <button onclick="app.handleRegister()" class="w-full py-3 text-sm text-slate-400 hover:text-white">Créer un compte</button>
+            </div>
 
-                    <button onclick="app.handleAuth()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/25 transition-all transform active:scale-95">
-                        Accéder au système
-                    </button>
-                    
-                    <button type="button" onclick="app.handleRegister()" class="w-full py-3 text-sm text-slate-400 hover:text-white transition-colors">
-                        Créer un compte entreprise
-                    </button>
-                </form>
-
-                <!-- Code Vendeur (caché par défaut) -->
-                <div id="vendeur-form" class="hidden space-y-4">
-                    <div class="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                        <p class="text-orange-200 text-sm text-center">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Entrez le code à 6 caractères fourni par votre patron
-                        </p>
-                    </div>
-                    <input type="text" id="vendor-code" maxlength="6" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-4 text-center text-2xl tracking-[0.5em] font-mono uppercase focus:border-orange-500 outline-none" placeholder="ABC123">
-                    <input type="text" id="vendor-name" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm" placeholder="Votre nom complet">
-                    <input type="tel" id="vendor-phone" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-sm" placeholder="07 XX XX XX XX">
-                    <button onclick="app.loginVendor()" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-3.5 rounded-xl font-semibold shadow-lg transition-all">
-                        Rejoindre la boutique
-                    </button>
-                </div>
+            <div id="form-vendeur" class="hidden space-y-4">
+                <input type="text" id="vendor-code" maxlength="6" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono uppercase outline-none focus:border-orange-500" placeholder="CODE">
+                <input type="text" id="vendor-name" placeholder="Votre nom" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500">
+                <input type="tel" id="vendor-phone" placeholder="07 XX XX XX XX" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500">
+                <button onclick="app.loginVendor()" class="w-full bg-orange-600 hover:bg-orange-500 text-white py-3.5 rounded-xl font-semibold shadow-lg transition-all">Rejoindre</button>
             </div>
         </div>
     </div>
 
-    <!-- APP PRINCIPALE (Cachée initialement) -->
+    <!-- MAIN APP -->
     <div id="main-app" class="hidden min-h-screen flex flex-col lg:flex-row">
         
-        <!-- SIDEBAR NAVIGATION -->
+        <!-- SIDEBAR -->
         <nav class="lg:w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col z-30">
             <div class="p-6 border-b border-slate-800">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-chart-pie text-white text-lg"></i>
+                        <i class="fas fa-chart-pie text-white"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-white tracking-tight">PhoneStock</h1>
-                        <p class="text-xs text-slate-500 font-mono" id="user-role-tag">ADMIN</p>
+                        <h1 class="font-bold text-white">PhoneStock</h1>
+                        <p class="text-xs text-slate-500 font-mono">EXPERT CI</p>
                     </div>
                 </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 space-y-1" id="nav-patron">
-                <button onclick="app.navigate('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all group bg-blue-600/20 text-blue-400 border border-blue-600/20">
-                    <i class="fas fa-home w-5 group-hover:scale-110 transition-transform"></i>
-                    Dashboard Expert
+                <button onclick="app.navigate('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all bg-blue-600/20 text-blue-400 border border-blue-600/20">
+                    <i class="fas fa-home w-5"></i> Dashboard
                 </button>
-                <button onclick="app.navigate('comptabilite')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all group">
-                    <i class="fas fa-calculator w-5 group-hover:scale-110 transition-transform"></i>
-                    Comptabilité CI
+                <button onclick="app.navigate('comptabilite')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                    <i class="fas fa-calculator w-5"></i> Comptabilité
                 </button>
-                <button onclick="app.navigate('stock')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all group">
-                    <i class="fas fa-boxes w-5 group-hover:scale-110 transition-transform"></i>
-                    Stock & IMEI
+                <button onclick="app.navigate('stock')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                    <i class="fas fa-boxes w-5"></i> Stock & IMEI
                 </button>
-                <button onclick="app.navigate('vendeurs')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all group">
-                    <i class="fas fa-users w-5 group-hover:scale-110 transition-transform"></i>
-                    Équipe Commerciale
+                <button onclick="app.navigate('vendeurs')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                    <i class="fas fa-users w-5"></i> Équipe
                 </button>
-                <button onclick="app.navigate('credits')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all group relative">
-                    <i class="fas fa-hand-holding-usd w-5 group-hover:scale-110 transition-transform"></i>
-                    Crédits Clients
-                    <span id="badge-credits" class="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-            </div>
-
-            <div class="p-4 border-t border-slate-800" id="nav-vendeur" style="display:none;">
-                <button onclick="app.navigate('v-dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all bg-green-600/20 text-green-400 border border-green-600/20 mb-2">
-                    <i class="fas fa-cash-register w-5"></i> Nouvelle Vente
-                </button>
-                <button onclick="app.navigate('v-stock')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
-                    <i class="fas fa-box w-5"></i> Mon Stock
+                <button onclick="app.navigate('credits')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all relative">
+                    <i class="fas fa-hand-holding-usd w-5"></i> Crédits
+                    <span id="nav-badge-credits" class="absolute right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
                 </button>
             </div>
 
             <div class="p-4 border-t border-slate-800 mt-auto">
                 <div class="flex items-center gap-3 mb-4 p-3 bg-slate-800/50 rounded-xl">
-                    <div class="w-2 h-2 rounded-full bg-green-500 status-online"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#10b981]"></div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate" id="sidebar-username">-</p>
-                        <p class="text-xs text-slate-500 truncate">En ligne • Sync OK</p>
+                        <p class="text-sm font-medium text-white truncate" id="sidebar-name">-</p>
+                        <p class="text-xs text-slate-500 truncate">En ligne</p>
                     </div>
                 </div>
-                <button onclick="app.logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all">
+                <button onclick="app.logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </button>
             </div>
         </nav>
 
-        <!-- CONTENU PRINCIPAL -->
-        <main class="flex-1 overflow-y-auto bg-slate-900 relative">
+        <!-- CONTENT -->
+        <main class="flex-1 overflow-y-auto bg-slate-900 p-4 lg:p-8">
             
-            <!-- DASHBOARD EXPERT -->
-            <section id="view-dashboard" class="p-4 lg:p-8 space-y-6">
+            <!-- DASHBOARD -->
+            <section id="view-dashboard" class="space-y-6">
                 <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-white mb-1">Tableau de Bord Expert</h2>
-                        <p class="text-slate-400 text-sm">Analyse temps réel • Période : <span id="current-period">Aujourd'hui</span></p>
+                        <h2 class="text-2xl font-bold text-white mb-1">Dashboard Expert</h2>
+                        <p class="text-slate-400 text-sm">Vue d'ensemble temps réel</p>
                     </div>
                     <div class="flex gap-2">
-                        <select onchange="app.updatePeriod(this.value)" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500">
+                        <select onchange="app.filterPeriod(this.value)" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none">
                             <option value="today">Aujourd'hui</option>
-                            <option value="week">Cette semaine</option>
+                            <option value="week">7 derniers jours</option>
                             <option value="month">Ce mois</option>
-                            <option value="quarter">Ce trimestre</option>
                         </select>
-                        <button onclick="app.exportReport()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg text-sm transition-all">
-                            <i class="fas fa-download mr-2"></i>Export
+                        <button onclick="app.exportData()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-download"></i>
                         </button>
                     </div>
                 </header>
 
-                <!-- KPIs GRID -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- CA -->
-                    <div class="kpi-card rounded-2xl p-5 relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i class="fas fa-wallet text-6xl text-blue-400"></i>
-                        </div>
-                        <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Chiffre d'Affaires</p>
-                        <h3 class="text-2xl font-bold text-white mb-1" id="kpi-ca">0 CFA</h3>
-                        <div class="flex items-center gap-1 text-xs">
-                            <span class="text-emerald-400 flex items-center"><i class="fas fa-arrow-up mr-1"></i><span id="kpi-ca-trend">0%</span></span>
-                            <span class="text-slate-500">vs période préc.</span>
-                        </div>
+                    <div class="kpi-card rounded-2xl p-5">
+                        <p class="text-slate-400 text-xs uppercase mb-1">Chiffre d'Affaires</p>
+                        <h3 class="text-2xl font-bold text-white" id="kpi-ca">0 CFA</h3>
                     </div>
-
-                    <!-- Marge Nette -->
-                    <div class="kpi-card rounded-2xl p-5 relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i class="fas fa-percentage text-6xl text-emerald-400"></i>
-                        </div>
-                        <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Marge Nette</p>
-                        <h3 class="text-2xl font-bold text-emerald-400 mb-1" id="kpi-marge">0 CFA</h3>
-                        <div class="flex items-center gap-1 text-xs">
-                            <span class="text-slate-400">Taux: </span>
-                            <span class="text-white font-medium" id="kpi-marge-pct">0%</span>
-                        </div>
+                    <div class="kpi-card rounded-2xl p-5">
+                        <p class="text-slate-400 text-xs uppercase mb-1">Marge Nette</p>
+                        <h3 class="text-2xl font-bold text-emerald-400" id="kpi-marge">0 CFA</h3>
                     </div>
-
-                    <!-- Dettes -->
-                    <div class="kpi-card rounded-2xl p-5 relative overflow-hidden group border-red-500/20">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i class="fas fa-exclamation-triangle text-6xl text-red-400"></i>
-                        </div>
-                        <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Crédits en Cours</p>
-                        <h3 class="text-2xl font-bold text-red-400 mb-1" id="kpi-dettes">0 CFA</h3>
-                        <div class="flex items-center gap-1 text-xs">
-                            <span class="text-slate-500"><span id="kpi-dettes-count">0</span> clients débiteurs</span>
-                        </div>
+                    <div class="kpi-card rounded-2xl p-5 border-l-4 border-red-500">
+                        <p class="text-slate-400 text-xs uppercase mb-1">Crédits Actifs</p>
+                        <h3 class="text-2xl font-bold text-red-400" id="kpi-credits">0 CFA</h3>
                     </div>
-
-                    <!-- Stock -->
-                    <div class="kpi-card rounded-2xl p-5 relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i class="fas fa-warehouse text-6xl text-purple-400"></i>
-                        </div>
-                        <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Valeur Stock</p>
-                        <h3 class="text-2xl font-bold text-white mb-1" id="kpi-stock">0 CFA</h3>
-                        <div class="flex items-center gap-1 text-xs">
-                            <span class="text-slate-400" id="kpi-stock-qty">0 unités</span>
-                        </div>
+                    <div class="kpi-card rounded-2xl p-5">
+                        <p class="text-slate-400 text-xs uppercase mb-1">Stock Total</p>
+                        <h3 class="text-2xl font-bold text-white" id="kpi-stock">0</h3>
                     </div>
                 </div>
 
-                <!-- GRAPHIQUES & ACTIVITÉ -->
                 <div class="grid lg:grid-cols-3 gap-6">
-                    <!-- Graphique Principal -->
                     <div class="lg:col-span-2 kpi-card rounded-2xl p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="font-semibold text-white">Évolution Financière</h3>
-                            <div class="flex gap-2">
-                                <span class="flex items-center gap-1 text-xs text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Bénéfice</span>
-                                <span class="flex items-center gap-1 text-xs text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-400"></span> CA</span>
-                            </div>
-                        </div>
-                        <div class="h-64">
-                            <canvas id="chart-evolution"></canvas>
-                        </div>
+                        <h3 class="font-semibold text-white mb-4">Évolution</h3>
+                        <canvas id="chart-main" height="250"></canvas>
                     </div>
-
-                    <!-- Activité Live -->
-                    <div class="kpi-card rounded-2xl p-6 flex flex-col h-96">
-                        <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
-                            <i class="fas fa-bolt text-yellow-400 animate-pulse"></i>
-                            Activité Temps Réel
-                        </h3>
-                        <div id="activity-feed" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                            <div class="text-center text-slate-500 py-8 text-sm">En attente de transactions...</div>
-                        </div>
+                    <div class="kpi-card rounded-2xl p-6">
+                        <h3 class="font-semibold text-white mb-4">Activité Récente</h3>
+                        <div id="activity-list" class="space-y-3 max-h-64 overflow-y-auto text-sm"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- COMPTABILITÉ EXPERT CI -->
-            <section id="view-comptabilite" class="hidden p-4 lg:p-8 space-y-6">
-                <header class="flex items-center justify-between mb-6">
+            <!-- SECTION STOCK & IMEI (CORRIGÉE) -->
+            <section id="view-stock" class="hidden-section space-y-6">
+                <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-white mb-1">Comptabilité Expert</h2>
-                        <p class="text-slate-400 text-sm">Conforme aux normes OHADA • DGI Côte d'Ivoire</p>
+                        <h2 class="text-2xl font-bold text-white mb-1">Gestion du Stock & IMEI</h2>
+                        <p class="text-slate-400 text-sm">Traçabilité complète des appareils</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="app.generateGrandLivre()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-blue-600/25">
-                            <i class="fas fa-book mr-2"></i>Grand Livre
+                        <button onclick="app.openModal('modal-add-product')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm shadow-lg shadow-blue-600/25 flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Ajouter Stock
                         </button>
-                        <button onclick="app.exportComptaExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm transition-all">
-                            <i class="fas fa-file-excel mr-2"></i>Balance Excel
+                        <button onclick="app.scanIMEI()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm border border-slate-700 flex items-center gap-2">
+                            <i class="fas fa-barcode"></i> Scanner
                         </button>
                     </div>
                 </header>
 
-                <!-- Filtres Compta -->
+                <!-- Filtres Stock -->
                 <div class="glass-panel rounded-xl p-4 flex flex-wrap gap-4">
                     <div class="flex-1 min-w-[200px]">
-                        <label class="text-xs text-slate-400 uppercase font-medium mb-1 block">Du</label>
-                        <input type="date" id="compta-start" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500">
+                        <input type="text" id="filter-imei" oninput="app.filterStock()" placeholder="Rechercher IMEI ou modèle..." class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-blue-500">
                     </div>
-                    <div class="flex-1 min-w-[200px]">
-                        <label class="text-xs text-slate-400 uppercase font-medium mb-1 block">Au</label>
-                        <input type="date" id="compta-end" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500">
-                    </div>
-                    <div class="flex items-end">
-                        <button onclick="app.filterCompta()" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg text-sm transition-all h-[38px]">
-                            Actualiser
-                        </button>
-                    </div>
+                    <select id="filter-location" onchange="app.filterStock()" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none min-w-[150px]">
+                        <option value="all">Tout le stock</option>
+                        <option value="patron">Stock Principal</option>
+                        <option value="vendeur">Chez les Vendeurs</option>
+                        <option value="vendu">Vendus</option>
+                    </select>
                 </div>
 
-                <!-- Tableau Grand Livre -->
+                <!-- Tableau Stock -->
                 <div class="kpi-card rounded-2xl overflow-hidden">
-                    <div class="p-4 border-b border-slate-700 flex items-center justify-between">
-                        <h3 class="font-semibold text-white">Journal des Opérations</h3>
-                        <div class="flex gap-2 text-xs">
-                            <span class="px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">Total: <span id="compta-total-lines" class="text-white font-bold">0</span> lignes</span>
-                        </div>
-                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
-                            <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase">
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-medium">Date</th>
-                                    <th class="px-4 py-3 text-left font-medium">N° Pièce</th>
-                                    <th class="px-4 py-3 text-left font-medium">Libellé</th>
-                                    <th class="px-4 py-3 text-left font-medium">Vendeur</th>
-                                    <th class="px-4 py-3 text-right font-medium">Débit (CFA)</th>
-                                    <th class="px-4 py-3 text-right font-medium">Crédit (CFA)</th>
-                                    <th class="px-4 py-3 text-center font-medium">Statut</th>
+                                    <th class="px-4 py-3 text-left">IMEI</th>
+                                    <th class="px-4 py-3 text-left">Modèle</th>
+                                    <th class="px-4 py-3 text-left">État</th>
+                                    <th class="px-4 py-3 text-left">Localisation</th>
+                                    <th class="px-4 py-3 text-right">Prix Achat</th>
+                                    <th class="px-4 py-3 text-right">Prix Vente</th>
+                                    <th class="px-4 py-3 text-center">Marge</th>
                                 </tr>
                             </thead>
-                            <tbody id="grand-livre-body" class="divide-y divide-slate-800">
-                                <!-- Rempli dynamiquement -->
+                            <tbody id="stock-table-body" class="divide-y divide-slate-800">
+                                <tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Chargement...</td></tr>
                             </tbody>
-                            <tfoot class="bg-slate-800/30 font-semibold text-white">
-                                <tr>
-                                    <td colspan="4" class="px-4 py-3 text-right">TOTALS :</td>
-                                    <td class="px-4 py-3 text-right text-emerald-400" id="total-debit">0</td>
-                                    <td class="px-4 py-3 text-right text-blue-400" id="total-credit">0</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
 
-                <!-- Analyse par Mode de Paiement (Spécifique CI) -->
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="kpi-card rounded-2xl p-6">
-                        <h3 class="font-semibold text-white mb-4">Répartition Mobile Money</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500">
-                                        <i class="fas fa-mobile-alt"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-white font-medium">Orange Money</p>
-                                        <p class="text-xs text-slate-400">Transferts P2P</p>
-                                    </div>
-                                </div>
-                                <span class="text-white font-bold" id="mm-om">0 CFA</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
-                                        <i class="fas fa-mobile-alt"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-white font-medium">MTN MoMo</p>
-                                        <p class="text-xs text-slate-400">Mobile Money</p>
-                                    </div>
-                                </div>
-                                <span class="text-white font-bold" id="mm-momo">0 CFA</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-500">
-                                        <i class="fas fa-water"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-white font-medium">Wave</p>
-                                        <p class="text-xs text-slate-400">Transfert</p>
-                                    </div>
-                                </div>
-                                <span class="text-white font-bold" id="mm-wave">0 CFA</span>
-                            </div>
-                        </div>
+                <!-- Stats IMEI -->
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="glass-panel rounded-xl p-4 border-l-4 border-blue-500">
+                        <p class="text-slate-400 text-xs">Stock Principal</p>
+                        <p class="text-2xl font-bold text-white mt-1" id="stat-stock-patron">0 unités</p>
                     </div>
-
-                    <div class="kpi-card rounded-2xl p-6">
-                        <h3 class="font-semibold text-white mb-4">Top 5 Vendeurs (Performance)</h3>
-                        <div id="top-vendeurs-list" class="space-y-3">
-                            <div class="text-center text-slate-500 py-8">Chargement...</div>
-                        </div>
+                    <div class="glass-panel rounded-xl p-4 border-l-4 border-orange-500">
+                        <p class="text-slate-400 text-xs">Alloué aux Vendeurs</p>
+                        <p class="text-2xl font-bold text-white mt-1" id="stat-stock-vendeurs">0 unités</p>
+                    </div>
+                    <div class="glass-panel rounded-xl p-4 border-l-4 border-green-500">
+                        <p class="text-slate-400 text-xs">Vendus (ce mois)</p>
+                        <p class="text-2xl font-bold text-white mt-1" id="stat-stock-vendus">0 unités</p>
                     </div>
                 </div>
             </section>
 
-            <!-- GESTION DES CRÉDITS (Spécifique CI) -->
-            <section id="view-credits" class="hidden p-4 lg:p-8 space-y-6">
-                <header class="flex items-center justify-between mb-6">
+            <!-- SECTION ÉQUIPE COMMERCIALE (CORRIGÉE) -->
+            <section id="view-vendeurs" class="hidden-section space-y-6">
+                <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-white mb-1">Gestion des Crédits Clients</h2>
-                        <p class="text-slate-400 text-sm">Suivi des avances et échéanciers • Calcul des intérêts</p>
+                        <h2 class="text-2xl font-bold text-white mb-1">Équipe Commerciale</h2>
+                        <p class="text-slate-400 text-sm">Gestion des vendeurs et codes d'accès</p>
                     </div>
-                    <button onclick="app.showAddCredit()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm shadow-lg shadow-blue-600/25">
-                        <i class="fas fa-plus mr-2"></i>Nouveau Crédit
+                    <button onclick="app.generateVendorCode()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg shadow-blue-600/25 flex items-center gap-2 transition-all">
+                        <i class="fas fa-plus-circle"></i> Nouveau Code Vendeur
                     </button>
                 </header>
 
-                <div class="grid lg:grid-cols-3 gap-6">
-                    <!-- Stats Crédits -->
-                    <div class="lg:col-span-3 grid md:grid-cols-4 gap-4">
-                        <div class="kpi-card rounded-xl p-4 border-l-4 border-red-500">
-                            <p class="text-slate-400 text-xs uppercase">Total Crédits Actifs</p>
-                            <h4 class="text-xl font-bold text-red-400 mt-1" id="credit-total">0 CFA</h4>
+                <!-- Nouveau Code Généré -->
+                <div id="new-code-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-2xl mb-6 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-white/10 transform -skew-x-12"></div>
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="text-white">
+                            <h3 class="font-bold text-lg mb-1">Code Vendeur Généré !</h3>
+                            <p class="text-emerald-100 text-sm">Valable 24h • Transmettez ce code au nouveau vendeur</p>
                         </div>
-                        <div class="kpi-card rounded-xl p-4 border-l-4 border-yellow-500">
-                            <p class="text-slate-400 text-xs uppercase">En retard (>30j)</p>
-                            <h4 class="text-xl font-bold text-yellow-400 mt-1" id="credit-retard">0 CFA</h4>
-                        </div>
-                        <div class="kpi-card rounded-xl p-4 border-l-4 border-blue-500">
-                            <p class="text-slate-400 text-xs uppercase">Recouvré ce mois</p>
-                            <h4 class="text-xl font-bold text-blue-400 mt-1" id="credit-recouvre">0 CFA</h4>
-                        </div>
-                        <div class="kpi-card rounded-xl p-4 border-l-4 border-emerald-500">
-                            <p class="text-slate-400 text-xs uppercase">Taux recouvrement</p>
-                            <h4 class="text-xl font-bold text-emerald-400 mt-1" id="credit-taux">0%</h4>
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white/20 backdrop-blur rounded-xl px-6 py-3 border border-white/30">
+                                <p class="text-3xl font-mono font-bold text-white tracking-widest" id="generated-code-display">ABC123</p>
+                            </div>
+                            <button onclick="app.copyCode()" class="bg-white text-emerald-600 px-4 py-3 rounded-xl font-medium hover:bg-emerald-50 transition-all shadow-lg">
+                                <i class="fas fa-copy"></i>
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Liste détaillée -->
-                    <div class="lg:col-span-3 kpi-card rounded-2xl overflow-hidden">
-                        <div class="p-4 border-b border-slate-700">
-                            <h3 class="font-semibold text-white">Échéancier des Remboursements</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left">Client</th>
-                                        <th class="px-4 py-3 text-left">Téléphone</th>
-                                        <th class="px-4 py-3 text-right">Montant Total</th>
-                                        <th class="px-4 py-3 text-right">Restant</th>
-                                        <th class="px-4 py-3 text-center">Prochaine échéance</th>
-                                        <th class="px-4 py-3 text-center">Jours restant</th>
-                                        <th class="px-4 py-3 text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="credits-body" class="divide-y divide-slate-800">
-                                    <!-- Dynamic -->
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- Liste des Vendeurs -->
+                <div class="grid gap-4" id="vendors-list">
+                    <!-- Rempli dynamiquement -->
+                </div>
+
+                <!-- Historique des codes -->
+                <div class="kpi-card rounded-2xl p-6 mt-6">
+                    <h3 class="font-semibold text-white mb-4">Codes d'Activation Récents</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="text-slate-400 text-xs uppercase border-b border-slate-800">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Code</th>
+                                    <th class="px-4 py-2 text-left">Date Création</th>
+                                    <th class="px-4 py-2 text-left">Utilisé par</th>
+                                    <th class="px-4 py-2 text-center">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="codes-history-body" class="divide-y divide-slate-800/50">
+                                <!-- Rempli dynamiquement -->
+                            </tbody>
+                        </table>
                     </div>
+                </div>
+            </section>
+
+            <!-- COMPTABILITÉ & CRÉDITS (Sections existantes conservées) -->
+            <section id="view-comptabilite" class="hidden-section space-y-6">
+                <h2 class="text-2xl font-bold text-white">Comptabilité Expert</h2>
+                <div class="kpi-card rounded-2xl p-6">
+                    <h3 class="font-semibold text-white mb-4">Grand Livre des Opérations</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">Date</th>
+                                    <th class="px-4 py-3 text-left">Opération</th>
+                                    <th class="px-4 py-3 text-right">Montant</th>
+                                    <th class="px-4 py-3 text-center">Type</th>
+                                </tr>
+                            </thead>
+                            <tbody id="compta-table" class="divide-y divide-slate-800">
+                                <tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">Aucune donnée</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-credits" class="hidden-section space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-white">Gestion des Crédits Clients</h2>
+                    <button onclick="app.showModal('modal-add-credit')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Nouveau Crédit</button>
+                </div>
+                <div id="credits-list" class="grid gap-4">
+                    <!-- Rempli dynamiquement -->
                 </div>
             </section>
 
         </main>
     </div>
 
-    <!-- MODAL CRÉDIT -->
-    <div id="modal-credit" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 rounded-2xl w-full max-w-md p-6 border border-slate-700 shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-4">Nouveau Crédit Client</h3>
-            <form onsubmit="app.saveCredit(event)" class="space-y-4">
-                <input type="text" name="client" placeholder="Nom du client" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500">
-                <input type="tel" name="telephone" placeholder="Téléphone" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" name="montant" placeholder="Montant (CFA)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500">
-                    <input type="date" name="echeance" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500">
+    <!-- MODALS -->
+    <div id="modal-add-product" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-lg p-6 border border-slate-700 shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4">Nouvel Appareil (IMEI)</h3>
+            <form onsubmit="app.saveProduct(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 uppercase mb-1 block">Numéro IMEI</label>
+                    <input type="text" name="imei" required pattern="[0-9]{15}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white font-mono outline-none focus:border-blue-500" placeholder="123456789012345">
                 </div>
-                <input type="text" name="objet" placeholder="Objet (Téléphone acheté...)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500">
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="app.closeModal('modal-credit')" class="flex-1 py-3 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-700 transition">Annuler</button>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase mb-1 block">Modèle</label>
+                        <input type="text" name="modele" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500" placeholder="iPhone 13 Pro">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase mb-1 block">Couleur</label>
+                        <input type="text" name="couleur" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500" placeholder="Noir">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase mb-1 block">Prix d'Achat (CFA)</label>
+                        <input type="number" name="prixAchat" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500" placeholder="350000">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase mb-1 block">Prix de Vente (CFA)</label>
+                        <input type="number" name="prixVente" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white outline-none focus:border-blue-500" placeholder="450000">
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="app.closeModal('modal-add-product')" class="flex-1 py-3 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-700 transition">Annuler</button>
                     <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition shadow-lg shadow-blue-600/25">Enregistrer</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div id="modal-add-credit" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-md p-6 border border-slate-700">
+            <h3 class="text-xl font-bold text-white mb-4">Nouveau Crédit Client</h3>
+            <form onsubmit="app.saveCredit(event)" class="space-y-4">
+                <input type="text" name="client" placeholder="Nom du client" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
+                <input type="tel" name="telephone" placeholder="Téléphone" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" name="montant" placeholder="Montant" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
+                    <input type="date" name="echeance" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white">
+                </div>
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCANNER SIMULATION -->
+    <div id="scanner-overlay" class="fixed inset-0 bg-black z-[60] hidden flex-col items-center justify-center">
+        <div class="relative w-full max-w-md aspect-[3/4] bg-black overflow-hidden rounded-2xl border-4 border-blue-500/50">
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent h-full w-full scan-line"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-48 h-32 border-2 border-blue-400 rounded-lg relative">
+                    <div class="absolute -top-1 -left-1 w-4 h-4 border-t-4 border-l-4 border-blue-500"></div>
+                    <div class="absolute -top-1 -right-1 w-4 h-4 border-t-4 border-r-4 border-blue-500"></div>
+                    <div class="absolute -bottom-1 -left-1 w-4 h-4 border-b-4 border-l-4 border-blue-500"></div>
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 border-b-4 border-r-4 border-blue-500"></div>
+                </div>
+            </div>
+            <p class="absolute bottom-8 left-0 right-0 text-center text-white text-sm">Scannez le code-barres IMEI...</p>
+        </div>
+        <button onclick="document.getElementById('scanner-overlay').classList.add('hidden')" class="mt-6 bg-white/20 backdrop-blur px-6 py-3 rounded-full text-white">Annuler</button>
+    </div>
+
     <script>
-        /**
-         * PHONESTOCK EXPERT CI
-         * Système de gestion comptable et commerciale
-         * Version 2.0 - Architecture Expert
-         */
-        
-        class PhoneStockExpert {
+        class PhoneStockApp {
             constructor() {
-                this.db = db;
-                this.auth = auth;
                 this.user = null;
                 this.profile = null;
                 this.boutiqueId = null;
-                this.charts = {};
-                this.data = {
-                    ventes: [],
-                    produits: [],
-                    credits: [],
-                    vendeurs: [],
-                    stats: {}
-                };
+                this.data = { products: [], vendors: [], sales: [], credits: [] };
                 this.listeners = [];
+                this.currentFilter = 'all';
+                this.charts = {};
                 
                 this.init();
             }
 
             init() {
-                // Auth state observer
-                this.auth.onAuthStateChanged(async (user) => {
+                auth.onAuthStateChanged(async (user) => {
                     if (user) {
                         this.user = user;
                         await this.loadProfile();
+                        this.setupListeners();
                         this.showMainApp();
-                        this.initializeData();
                     } else {
                         this.showLogin();
                     }
                 });
-
-                // Sync indicator
-                this.db.waitForPendingWrites().then(() => {
-                    this.updateSyncStatus('synced');
-                });
             }
 
-            // ========== AUTHENTIFICATION ==========
-            
+            async loadProfile() {
+                const doc = await db.collection('users').doc(this.user.uid).get();
+                this.profile = doc.data();
+                this.boutiqueId = this.profile.boutiqueId || this.user.uid;
+                document.getElementById('sidebar-name').textContent = this.profile.nom || this.user.email;
+            }
+
+            // AUTH
             switchMode(mode) {
-                document.getElementById('login-form').classList.toggle('hidden', mode === 'vendeur');
-                document.getElementById('vendeur-form').classList.toggle('hidden', mode === 'patron');
+                document.getElementById('form-patron').classList.toggle('hidden', mode !== 'patron');
+                document.getElementById('form-vendeur').classList.toggle('hidden', mode !== 'vendeur');
                 
                 document.getElementById('tab-patron').className = mode === 'patron' 
-                    ? 'flex-1 py-3 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white shadow-lg'
-                    : 'flex-1 py-3 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white';
-                    
+                    ? 'py-3 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-lg transition-all' 
+                    : 'py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all';
                 document.getElementById('tab-vendeur').className = mode === 'vendeur'
-                    ? 'flex-1 py-3 rounded-lg text-sm font-medium transition-all bg-orange-600 text-white shadow-lg'
-                    : 'flex-1 py-3 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white';
+                    ? 'py-3 rounded-lg text-sm font-medium bg-orange-600 text-white shadow-lg transition-all'
+                    : 'py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all';
             }
 
             async handleAuth() {
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
-                
                 try {
-                    await this.auth.signInWithEmailAndPassword(email, password);
-                } catch (error) {
-                    this.showToast(error.message, 'error');
+                    await auth.signInWithEmailAndPassword(email, password);
+                } catch (e) {
+                    alert(e.message);
                 }
             }
 
             async handleRegister() {
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
-                
-                if (password.length < 6) {
-                    this.showToast('Le mot de passe doit faire 6 caractères minimum', 'error');
-                    return;
-                }
+                if (password.length < 6) return alert('Mot de passe trop court');
                 
                 try {
-                    const cred = await this.auth.createUserWithEmailAndPassword(email, password);
-                    await this.db.collection('users').doc(cred.user.uid).set({
-                        email,
-                        role: 'patron',
-                        nom: email.split('@')[0],
-                        boutiqueId: cred.user.uid,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        config: {
-                            tauxCommission: 0.05,
-                            alerteStock: 3,
-                            devise: 'XOF'
-                        }
+                    const cred = await auth.createUserWithEmailAndPassword(email, password);
+                    await db.collection('users').doc(cred.user.uid).set({
+                        email, role: 'patron', nom: email.split('@')[0], 
+                        boutiqueId: cred.user.uid, createdAt: new Date()
                     });
-                    this.showToast('Compte créé avec succès !', 'success');
-                } catch (error) {
-                    this.showToast(error.message, 'error');
+                } catch (e) {
+                    alert(e.message);
                 }
             }
 
@@ -683,411 +486,367 @@
                 const phone = document.getElementById('vendor-phone').value;
                 
                 try {
-                    // Vérifier code
-                    const snap = await this.db.collection('activation_codes')
-                        .where('code', '==', code)
-                        .where('used', '==', false)
-                        .get();
-                    
-                    if (snap.empty) throw new Error('Code invalide ou déjà utilisé');
+                    const snap = await db.collection('codes').where('code', '==', code).where('used', '==', false).get();
+                    if (snap.empty) throw new Error('Code invalide');
                     
                     const codeData = snap.docs[0].data();
+                    const cred = await auth.signInAnonymously();
                     
-                    // Créer auth anonyme
-                    const cred = await this.auth.signInAnonymously();
-                    
-                    // Créer profil vendeur
-                    await this.db.collection('users').doc(cred.user.uid).set({
-                        role: 'vendeur',
-                        nom,
-                        telephone: phone,
-                        boutiqueId: codeData.boutiqueId,
-                        code,
-                        actif: true,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    await db.collection('users').doc(cred.user.uid).set({
+                        role: 'vendeur', nom, telephone: phone,
+                        boutiqueId: codeData.boutiqueId, code, actif: true,
+                        createdAt: new Date()
                     });
                     
-                    // Marquer code comme utilisé
-                    await snap.docs[0].ref.update({ 
-                        used: true, 
-                        usedBy: cred.user.uid,
-                        usedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                } catch (error) {
-                    this.showToast(error.message, 'error');
+                    await snap.docs[0].ref.update({ used: true, usedBy: cred.user.uid, usedAt: new Date() });
+                } catch (e) {
+                    alert(e.message);
                 }
             }
 
             logout() {
-                this.listeners.forEach(unsub => unsub());
-                this.auth.signOut();
+                this.listeners.forEach(l => l());
+                auth.signOut();
             }
 
-            // ========== INITIALISATION DONNÉES ==========
+            // LISTENERS Temps réel
+            setupListeners() {
+                // Stock produits
+                const unsubProducts = db.collection('products')
+                    .where('boutiqueId', '==', this.boutiqueId)
+                    .onSnapshot(snap => {
+                        this.data.products = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        this.updateStockView();
+                        this.updateDashboard();
+                    });
+                this.listeners.push(unsubProducts);
 
-            async loadProfile() {
-                const doc = await this.db.collection('users').doc(this.user.uid).get();
-                this.profile = doc.data();
-                this.boutiqueId = this.profile.boutiqueId || this.user.uid;
+                // Vendeurs
+                const unsubVendors = db.collection('users')
+                    .where('boutiqueId', '==', this.boutiqueId)
+                    .where('role', '==', 'vendeur')
+                    .onSnapshot(snap => {
+                        this.data.vendors = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        this.updateVendorsView();
+                    });
+                this.listeners.push(unsubVendors);
+
+                // Ventes
+                const unsubSales = db.collection('sales')
+                    .where('boutiqueId', '==', this.boutiqueId)
+                    .orderBy('date', 'desc')
+                    .limit(50)
+                    .onSnapshot(snap => {
+                        this.data.sales = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        this.updateDashboard();
+                    });
+                this.listeners.push(unsubSales);
+
+                // Crédits
+                const unsubCredits = db.collection('credits')
+                    .where('boutiqueId', '==', this.boutiqueId)
+                    .where('status', 'in', ['actif', 'partiel'])
+                    .onSnapshot(snap => {
+                        this.data.credits = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        this.updateCreditsView();
+                    });
+                this.listeners.push(unsubCredits);
+
+                // Codes historique
+                db.collection('codes').where('boutiqueId', '==', this.boutiqueId)
+                    .orderBy('createdAt', 'desc').limit(10)
+                    .onSnapshot(snap => {
+                        this.updateCodesHistory(snap.docs.map(d => ({id: d.id, ...d.data()})));
+                    });
             }
 
-            initializeData() {
-                if (this.profile.role === 'patron') {
-                    this.setupPatronListeners();
+            // VIEWS UPDATES
+            updateDashboard() {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                // Calculs
+                const todaySales = this.data.sales.filter(s => s.date?.toDate() >= today);
+                const ca = todaySales.reduce((sum, s) => sum + (s.amount || 0), 0);
+                const marge = todaySales.reduce((sum, s) => sum + (s.margin || 0), 0);
+                const totalCredits = this.data.credits.reduce((sum, c) => sum + (c.remaining || 0), 0);
+                
+                document.getElementById('kpi-ca').textContent = this.formatCFA(ca);
+                document.getElementById('kpi-marge').textContent = this.formatCFA(marge);
+                document.getElementById('kpi-credits').textContent = this.formatCFA(totalCredits);
+                document.getElementById('kpi-stock').textContent = this.data.products.filter(p => !p.sold).length;
+                
+                // Activité récente
+                const actDiv = document.getElementById('activity-list');
+                if (this.data.sales.length === 0) {
+                    actDiv.innerHTML = '<p class="text-slate-500 text-center py-4">Aucune activité</p>';
                 } else {
-                    this.setupVendorListeners();
+                    actDiv.innerHTML = this.data.sales.slice(0, 10).map(s => `
+                        <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
+                            <div>
+                                <p class="text-white font-medium text-sm">${s.productName || 'Vente'}</p>
+                                <p class="text-xs text-slate-400">${s.sellerName || 'Vendeur'} • ${s.date?.toDate().toLocaleTimeString('fr-FR')}</p>
+                            </div>
+                            <span class="text-emerald-400 font-bold text-sm">${this.formatCFA(s.amount)}</span>
+                        </div>
+                    `).join('');
                 }
             }
 
-            setupPatronListeners() {
-                // Écoute des ventes temps réel
-                const unsubVentes = this.db.collection('ventes')
-                    .where('boutiqueId', '==', this.boutiqueId)
-                    .orderBy('timestamp', 'desc')
-                    .limit(100)
-                    .onSnapshot(snapshot => {
-                        this.data.ventes = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                        this.updateDashboard();
-                        this.updateComptabilite();
-                    });
+            updateStockView() {
+                const filter = document.getElementById('filter-location')?.value || 'all';
+                const search = document.getElementById('filter-imei')?.value.toLowerCase() || '';
                 
-                this.listeners.push(unsubVentes);
-
-                // Écoute stock
-                const unsubStock = this.db.collection('produits')
-                    .where('boutiqueId', '==', this.boutiqueId)
-                    .where('vendu', '==', false)
-                    .onSnapshot(snapshot => {
-                        this.data.produits = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                        this.updateStockKPIs();
-                    });
+                let filtered = this.data.products;
                 
-                this.listeners.push(unsubStock);
-
-                // Écoute crédits
-                const unsubCredits = this.db.collection('credits')
-                    .where('boutiqueId', '==', this.boutiqueId)
-                    .where('statut', 'in', ['actif', 'partiel'])
-                    .onSnapshot(snapshot => {
-                        this.data.credits = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                        this.updateCreditsView();
-                    });
+                if (search) {
+                    filtered = filtered.filter(p => 
+                        p.imei?.toLowerCase().includes(search) || 
+                        p.modele?.toLowerCase().includes(search)
+                    );
+                }
                 
-                this.listeners.push(unsubCredits);
-
-                // Écoute vendeurs
-                const unsubVendors = this.db.collection('users')
-                    .where('boutiqueId', '==', this.boutiqueId)
-                    .where('role', '==', 'vendeur')
-                    .onSnapshot(snapshot => {
-                        this.data.vendeurs = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                    });
+                if (filter === 'patron') filtered = filtered.filter(p => !p.vendorId && !p.sold);
+                if (filter === 'vendeur') filtered = filtered.filter(p => p.vendorId && !p.sold);
+                if (filter === 'vendu') filtered = filtered.filter(p => p.sold);
                 
-                this.listeners.push(unsubVendors);
+                const tbody = document.getElementById('stock-table-body');
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Aucun produit trouvé</td></tr>';
+                } else {
+                    tbody.innerHTML = filtered.map(p => {
+                        let location, statusColor;
+                        if (p.sold) {
+                            location = `<span class="text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Vendu</span>`;
+                            statusColor = 'bg-emerald-500/10 text-emerald-400';
+                        } else if (p.vendorId) {
+                            const v = this.data.vendors.find(v => v.id === p.vendorId);
+                            location = `<span class="text-orange-400"><i class="fas fa-user mr-1"></i>${v?.nom || 'Vendeur'}</span>`;
+                            statusColor = 'bg-orange-500/10 text-orange-400';
+                        } else {
+                            location = `<span class="text-blue-400"><i class="fas fa-warehouse mr-1"></i>Stock Principal</span>`;
+                            statusColor = 'bg-blue-500/10 text-blue-400';
+                        }
+                        
+                        const marge = ((p.prixVente || 0) - (p.prixAchat || 0));
+                        const margePct = p.prixAchat ? Math.round((marge / p.prixAchat) * 100) : 0;
+                        
+                        return `
+                            <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                <td class="px-4 py-3 font-mono text-xs text-slate-400">${p.imei || '-'}</td>
+                                <td class="px-4 py-3 text-white font-medium">${p.modele || '-'} <span class="text-slate-500 text-xs">(${p.couleur || '-'})</span></td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-1 rounded text-xs ${statusColor} border border-current border-opacity-20">
+                                        ${p.sold ? 'Vendu' : p.vendorId ? 'Alloué' : 'Disponible'}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm">${location}</td>
+                                <td class="px-4 py-3 text-right text-slate-400 text-sm">${this.formatCFA(p.prixAchat)}</td>
+                                <td class="px-4 py-3 text-right text-white font-medium">${this.formatCFA(p.prixVente)}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="text-emerald-400 text-sm font-medium">+${margePct}%</span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+                
+                // Stats
+                document.getElementById('stat-stock-patron').textContent = 
+                    this.data.products.filter(p => !p.vendorId && !p.sold).length + ' unités';
+                document.getElementById('stat-stock-vendeurs').textContent = 
+                    this.data.products.filter(p => p.vendorId && !p.sold).length + ' unités';
+                document.getElementById('stat-stock-vendus').textContent = 
+                    this.data.products.filter(p => p.sold).length + ' unités';
             }
 
-            setupVendorListeners() {
-                // Version simplifiée pour vendeur
-                document.getElementById('nav-patron').style.display = 'none';
-                document.getElementById('nav-vendeur').style.display = 'block';
-                
-                const unsub = this.db.collection('produits')
-                    .where('vendeurId', '==', this.user.uid)
-                    .where('vendu', '==', false)
-                    .onSnapshot(snap => {
-                        this.data.produits = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    });
-                
-                this.listeners.push(unsub);
-            }
-
-            // ========== DASHBOARD & KPIs ==========
-
-            updateDashboard() {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                
-                // Calculs période
-                const ventesToday = this.data.ventes.filter(v => {
-                    const d = v.timestamp?.toDate();
-                    return d && d >= today;
-                });
-                
-                const caToday = ventesToday.reduce((sum, v) => sum + (v.montant || 0), 0);
-                const margeToday = ventesToday.reduce((sum, v) => sum + (v.margeNette || 0), 0);
-                const tauxMarge = caToday > 0 ? ((margeToday / caToday) * 100).toFixed(1) : 0;
-                
-                // Dettes actives
-                const totalDettes = this.data.credits.reduce((sum, c) => sum + (c.montantRestant || 0), 0);
-                
-                // Stock valeur
-                const valeurStock = this.data.produits.reduce((sum, p) => sum + (p.prixAchat || 0), 0);
-                
-                // Update UI
-                document.getElementById('kpi-ca').textContent = this.formatCFA(caToday);
-                document.getElementById('kpi-marge').textContent = this.formatCFA(margeToday);
-                document.getElementById('kpi-marge-pct').textContent = tauxMarge + '%';
-                document.getElementById('kpi-dettes').textContent = this.formatCFA(totalDettes);
-                document.getElementById('kpi-dettes-count').textContent = this.data.credits.length;
-                document.getElementById('kpi-stock').textContent = this.formatCFA(valeurStock);
-                document.getElementById('kpi-stock-qty').textContent = this.data.produits.length + ' unités';
-                
-                // Activité live
-                this.updateActivityFeed();
-                
-                // Graphique
-                this.updateChart();
-            }
-
-            updateActivityFeed() {
-                const container = document.getElementById('activity-feed');
-                if (this.data.ventes.length === 0) {
-                    container.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">Aucune vente enregistrée</div>';
+            updateVendorsView() {
+                const container = document.getElementById('vendors-list');
+                if (this.data.vendors.length === 0) {
+                    container.innerHTML = '<div class="text-center text-slate-500 py-8">Aucun vendeur enregistré</div>';
                     return;
                 }
                 
-                container.innerHTML = this.data.ventes.slice(0, 20).map(v => {
-                    const time = v.timestamp?.toDate().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-                    const vendeur = v.vendeurNom || 'Vendeur';
+                // Calculer les ventes par vendeur
+                const salesByVendor = {};
+                this.data.sales.forEach(s => {
+                    salesByVendor[s.vendorId] = (salesByVendor[s.vendorId] || 0) + (s.amount || 0);
+                });
+                
+                container.innerHTML = this.data.vendors.map(v => {
+                    const ca = salesByVendor[v.id] || 0;
+                    const stockCount = this.data.products.filter(p => p.vendorId === v.id && !p.sold).length;
+                    
                     return `
-                        <div class="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg border border-slate-700/30 hover:bg-slate-800/50 transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs">
-                                    <i class="fas fa-check"></i>
+                        <div class="kpi-card rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg">
+                                    ${v.nom?.charAt(0).toUpperCase() || 'V'}
                                 </div>
                                 <div>
-                                    <p class="text-white text-sm font-medium">${v.produits?.map(p => p.modele).join(', ') || 'Vente'}</p>
-                                    <p class="text-xs text-slate-400">${vendeur} • ${time}</p>
+                                    <h4 class="text-white font-bold">${v.nom}</h4>
+                                    <p class="text-xs text-slate-400">${v.telephone} • Code: ${v.code}</p>
+                                    <div class="flex gap-3 mt-1 text-xs">
+                                        <span class="text-slate-300"><i class="fas fa-box mr-1 text-blue-400"></i>${stockCount} en stock</span>
+                                        <span class="text-slate-300"><i class="fas fa-chart-line mr-1 text-emerald-400"></i>${this.formatCFA(ca)} CA</span>
+                                    </div>
                                 </div>
                             </div>
-                            <span class="text-emerald-400 font-bold text-sm">${this.formatCFA(v.montant)}</span>
+                            <div class="flex gap-2">
+                                <button onclick="app.allocateStock('${v.id}')" class="px-3 py-2 bg-blue-600/20 text-blue-400 rounded-lg text-sm hover:bg-blue-600/30 transition" title="Allouer du stock">
+                                    <i class="fas fa-plus"></i> Stock
+                                </button>
+                                <button onclick="app.removeVendor('${v.id}')" class="px-3 py-2 bg-red-600/20 text-red-400 rounded-lg text-sm hover:bg-red-600/30 transition">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
             }
 
-            updateChart() {
-                const ctx = document.getElementById('chart-evolution');
-                if (!ctx) return;
-                
-                // Agréger par jour (7 derniers jours)
-                const jours = {};
-                const today = new Date();
-                for (let i = 6; i >= 0; i--) {
-                    const d = new Date(today);
-                    d.setDate(d.getDate() - i);
-                    const key = d.toISOString().split('T')[0];
-                    jours[key] = { ca: 0, marge: 0 };
-                }
-                
-                this.data.ventes.forEach(v => {
-                    const d = v.timestamp?.toDate();
-                    if (d) {
-                        const key = d.toISOString().split('T')[0];
-                        if (jours[key]) {
-                            jours[key].ca += v.montant || 0;
-                            jours[key].marge += v.margeNette || 0;
-                        }
-                    }
-                });
-                
-                const labels = Object.keys(jours).map(d => d.substr(8, 2) + '/' + d.substr(5, 2));
-                const dataCA = Object.values(jours).map(v => v.ca);
-                const dataMarge = Object.values(jours).map(v => v.marge);
-                
-                if (this.charts.evolution) this.charts.evolution.destroy();
-                
-                this.charts.evolution = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [{
-                            label: 'Chiffre d\'affaires',
-                            data: dataCA,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }, {
-                            label: 'Marge nette',
-                            data: dataMarge,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            y: {
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                                ticks: { color: '#94a3b8' }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { color: '#94a3b8' }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // ========== COMPTABILITÉ EXPERT ==========
-
-            updateComptabilite() {
-                if (!document.getElementById('view-comptabilite').classList.contains('hidden')) {
-                    this.renderGrandLivre();
-                    this.calculateMMStats();
-                }
-            }
-
-            renderGrandLivre() {
-                const tbody = document.getElementById('grand-livre-body');
+            updateCodesHistory(codes) {
+                const tbody = document.getElementById('codes-history-body');
                 if (!tbody) return;
                 
-                let totalDebit = 0;
-                let totalCredit = 0;
-                
-                // Préparer les écritures comptables
-                const ecritures = this.data.ventes.map((v, idx) => {
-                    totalCredit += v.montant || 0;
-                    return {
-                        date: v.timestamp?.toDate(),
-                        piece: 'VTE-' + v.id.substr(-6).toUpperCase(),
-                        libelle: `Vente ${v.produits?.map(p => p.modele).join(', ')} - ${v.client?.nom || 'Client'}`,
-                        vendeur: v.vendeurNom || '-',
-                        debit: 0,
-                        credit: v.montant || 0,
-                        marge: v.margeNette || 0,
-                        mode: v.paiement || 'cash'
-                    };
-                });
-                
-                // Ajouter les crédits (créances clients)
-                this.data.credits.forEach(c => {
-                    totalDebit += c.montantRestant || 0;
-                    ecritures.push({
-                        date: c.dateEcheance?.toDate(),
-                        piece: 'CRE-' + c.id.substr(-6).toUpperCase(),
-                        libelle: `Crédit client - ${c.client} (Restant dû)`,
-                        vendeur: '-',
-                        debit: c.montantRestant || 0,
-                        credit: 0,
-                        type: 'creance'
-                    });
-                });
-                
-                // Trier par date
-                ecritures.sort((a, b) => (b.date || 0) - (a.date || 0));
-                
-                document.getElementById('compta-total-lines').textContent = ecritures.length;
-                document.getElementById('total-debit').textContent = this.formatCFA(totalDebit);
-                document.getElementById('total-credit').textContent = this.formatCFA(totalCredit);
-                
-                tbody.innerHTML = ecritures.map(e => {
-                    const dateStr = e.date ? e.date.toLocaleDateString('fr-FR') : '-';
-                    const isCredit = e.type === 'creance';
-                    return `
-                        <tr class="compta-row border-b border-slate-800/50 text-sm">
-                            <td class="px-4 py-3 text-slate-300">${dateStr}</td>
-                            <td class="px-4 py-3 font-mono text-xs text-slate-400">${e.piece}</td>
-                            <td class="px-4 py-3 text-white max-w-xs truncate" title="${e.libelle}">${e.libelle}</td>
-                            <td class="px-4 py-3 text-slate-400">${e.vendeur}</td>
-                            <td class="px-4 py-3 text-right ${isCredit ? 'text-red-400 font-medium' : 'text-slate-500'}">
-                                ${e.debit > 0 ? this.formatCFA(e.debit) : '-'}
-                            </td>
-                            <td class="px-4 py-3 text-right ${!isCredit ? 'text-emerald-400 font-medium' : 'text-slate-500'}">
-                                ${e.credit > 0 ? this.formatCFA(e.credit) : '-'}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                ${e.marge ? `<span class="marge-badge px-2 py-1 rounded text-xs">+${this.formatCFA(e.marge)}</span>` : 
-                                  isCredit ? '<span class="dettes-badge px-2 py-1 rounded text-xs">Créance</span>' : 
-                                  '<span class="px-2 py-1 rounded text-xs bg-slate-700 text-slate-300">Payé</span>'}
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                tbody.innerHTML = codes.map(c => `
+                    <tr class="border-b border-slate-800/30 text-sm">
+                        <td class="px-4 py-3 font-mono font-bold text-white">${c.code}</td>
+                        <td class="px-4 py-3 text-slate-400">${c.createdAt?.toDate().toLocaleDateString('fr-FR') || '-'}</td>
+                        <td class="px-4 py-3 text-slate-300">${c.usedByName || '-'}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 rounded text-xs ${c.used ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}">
+                                ${c.used ? 'Utilisé' : 'En attente'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
             }
-
-            calculateMMStats() {
-                const stats = { om: 0, momo: 0, wave: 0, cash: 0 };
-                this.data.ventes.forEach(v => {
-                    if (stats[v.paiement] !== undefined) {
-                        stats[v.paiement] += v.montant || 0;
-                    }
-                });
-                
-                document.getElementById('mm-om').textContent = this.formatCFA(stats.om);
-                document.getElementById('mm-momo').textContent = this.formatCFA(stats.momo);
-                document.getElementById('mm-wave').textContent = this.formatCFA(stats.wave);
-            }
-
-            // ========== CRÉDITS CLIENTS ==========
 
             updateCreditsView() {
-                const tbody = document.getElementById('credits-body');
-                if (!tbody) return;
+                const container = document.getElementById('credits-list');
+                const badge = document.getElementById('nav-badge-credits');
                 
-                let total = 0;
-                let retard = 0;
+                if (badge) {
+                    if (this.data.credits.length > 0) {
+                        badge.textContent = this.data.credits.length;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+                
+                if (!container) return;
+                
+                if (this.data.credits.length === 0) {
+                    container.innerHTML = '<div class="text-center text-slate-500 py-8">Aucun crédit en cours</div>';
+                    return;
+                }
+                
                 const now = new Date();
                 
-                tbody.innerHTML = this.data.credits.map(c => {
-                    const montantRestant = c.montantRestant || c.montant || 0;
-                    total += montantRestant;
-                    
-                    const dateEcheance = c.dateEcheance?.toDate();
-                    const joursRestant = dateEcheance ? Math.ceil((dateEcheance - now) / (1000 * 60 * 60 * 24)) : 0;
-                    
-                    if (joursRestant < 0) retard += montantRestant;
-                    
-                    let statusClass = 'text-emerald-400';
-                    let statusText = joursRestant + ' jours';
-                    if (joursRestant < 0) {
-                        statusClass = 'text-red-400 font-bold';
-                        statusText = Math.abs(joursRestant) + ' jours de retard';
-                    } else if (joursRestant < 7) {
-                        statusClass = 'text-yellow-400';
-                    }
+                container.innerHTML = this.data.credits.map(c => {
+                    const daysLeft = Math.ceil((c.dueDate?.toDate() - now) / (1000 * 60 * 60 * 24));
+                    const isLate = daysLeft < 0;
                     
                     return `
-                        <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                            <td class="px-4 py-3 text-white font-medium">${c.client}</td>
-                            <td class="px-4 py-3 text-slate-400 text-sm">${c.telephone}</td>
-                            <td class="px-4 py-3 text-right text-slate-300">${this.formatCFA(c.montant)}</td>
-                            <td class="px-4 py-3 text-right text-red-400 font-bold">${this.formatCFA(montantRestant)}</td>
-                            <td class="px-4 py-3 text-center text-slate-400 text-sm">
-                                ${dateEcheance ? dateEcheance.toLocaleDateString('fr-FR') : '-'}
-                            </td>
-                            <td class="px-4 py-3 text-center ${statusClass} text-sm">${statusText}</td>
-                            <td class="px-4 py-3 text-center">
-                                <button onclick="app.rembourserCredit('${c.id}')" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                        <div class="kpi-card rounded-xl p-4 border-l-4 ${isLate ? 'border-red-500' : 'border-blue-500'}">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="text-white font-bold">${c.client}</h4>
+                                    <p class="text-sm text-slate-400">${c.telephone}</p>
+                                </div>
+                                <span class="text-2xl font-bold ${isLate ? 'text-red-400' : 'text-white'}">${this.formatCFA(c.remaining || c.amount)}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="${isLate ? 'text-red-400' : 'text-slate-400'}">
+                                    <i class="fas fa-clock mr-1"></i>${isLate ? `Retard de ${Math.abs(daysLeft)} jours` : `${daysLeft} jours restants`}
+                                </span>
+                                <button onclick="app.repayCredit('${c.id}')" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-500 transition">
                                     Rembourser
                                 </button>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                     `;
                 }).join('');
+            }
+
+            // ACTIONS
+            async saveProduct(e) {
+                e.preventDefault();
+                const fd = new FormData(e.target);
                 
-                document.getElementById('credit-total').textContent = this.formatCFA(total);
-                document.getElementById('credit-retard').textContent = this.formatCFA(retard);
-                
-                // Badge dans la nav
-                const badge = document.getElementById('badge-credits');
-                if (this.data.credits.length > 0) {
-                    badge.textContent = this.data.credits.length;
-                    badge.classList.remove('hidden');
+                try {
+                    await db.collection('products').add({
+                        boutiqueId: this.boutiqueId,
+                        imei: fd.get('imei'),
+                        modele: fd.get('modele'),
+                        couleur: fd.get('couleur'),
+                        prixAchat: parseInt(fd.get('prixAchat')),
+                        prixVente: parseInt(fd.get('prixVente')),
+                        vendorId: null,
+                        sold: false,
+                        createdAt: new Date()
+                    });
+                    this.closeModal('modal-add-product');
+                    e.target.reset();
+                    alert('Produit ajouté !');
+                } catch (e) {
+                    alert(e.message);
                 }
             }
 
-            showAddCredit() {
-                document.getElementById('modal-credit').classList.remove('hidden');
+            async generateVendorCode() {
+                const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+                
+                try {
+                    await db.collection('codes').add({
+                        code,
+                        boutiqueId: this.boutiqueId,
+                        used: false,
+                        createdAt: new Date()
+                    });
+                    
+                    document.getElementById('generated-code-display').textContent = code;
+                    document.getElementById('new-code-banner').classList.remove('hidden');
+                    document.getElementById('new-code-banner').scrollIntoView({ behavior: 'smooth' });
+                } catch (e) {
+                    alert(e.message);
+                }
+            }
+
+            async allocateStock(vendorId) {
+                const available = this.data.products.filter(p => !p.vendorId && !p.sold);
+                if (available.length === 0) return alert('Stock principal vide !');
+                
+                const imei = prompt('Entrez l\'IMEI du produit à transférer:\n' + available.slice(0, 5).map(p => `- ${p.imei} (${p.modele})`).join('\n'));
+                if (!imei) return;
+                
+                const product = available.find(p => p.imei === imei);
+                if (!product) return alert('IMEI non trouvé dans le stock principal');
+                
+                try {
+                    await db.collection('products').doc(product.id).update({
+                        vendorId,
+                        transferredAt: new Date()
+                    });
+                    alert('Stock transféré au vendeur !');
+                } catch (e) {
+                    alert(e.message);
+                }
+            }
+
+            async removeVendor(vendorId) {
+                if (!confirm('Supprimer ce vendeur ?')) return;
+                // Vérifier s'il a du stock
+                const hasStock = this.data.products.some(p => p.vendorId === vendorId && !p.sold);
+                if (hasStock) return alert('Ce vendeur a encore du stock alloué !');
+                
+                try {
+                    await db.collection('users').doc(vendorId).update({ actif: false });
+                } catch (e) {
+                    alert(e.message);
+                }
             }
 
             async saveCredit(e) {
@@ -1095,69 +854,88 @@
                 const fd = new FormData(e.target);
                 
                 try {
-                    await this.db.collection('credits').add({
+                    await db.collection('credits').add({
                         boutiqueId: this.boutiqueId,
                         client: fd.get('client'),
                         telephone: fd.get('telephone'),
-                        montant: parseInt(fd.get('montant')),
-                        montantRestant: parseInt(fd.get('montant')),
-                        dateEcheance: new Date(fd.get('echeance')),
-                        objet: fd.get('objet'),
-                        statut: 'actif',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        amount: parseInt(fd.get('montant')),
+                        remaining: parseInt(fd.get('montant')),
+                        dueDate: new Date(fd.get('echeance')),
+                        status: 'actif',
+                        createdAt: new Date()
                     });
-                    
-                    this.closeModal('modal-credit');
+                    this.closeModal('modal-add-credit');
                     e.target.reset();
-                    this.showToast('Crédit enregistré', 'success');
-                } catch (error) {
-                    this.showToast(error.message, 'error');
+                } catch (e) {
+                    alert(e.message);
                 }
             }
 
-            // ========== UTILITAIRES ==========
-
-            navigate(view) {
-                // Cacher toutes les vues
-                document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
-                // Afficher la cible
-                document.getElementById('view-' + view)?.classList.remove('hidden');
+            async repayCredit(creditId) {
+                const amount = prompt('Montant du remboursement (CFA):');
+                if (!amount || isNaN(amount)) return;
                 
-                // Update nav active state
+                const credit = this.data.credits.find(c => c.id === creditId);
+                if (!credit) return;
+                
+                const newRemaining = (credit.remaining || credit.amount) - parseInt(amount);
+                
+                try {
+                    await db.collection('credits').doc(creditId).update({
+                        remaining: Math.max(0, newRemaining),
+                        status: newRemaining <= 0 ? 'solde' : 'partiel',
+                        lastPayment: new Date()
+                    });
+                    alert('Remboursement enregistré !');
+                } catch (e) {
+                    alert(e.message);
+                }
+            }
+
+            // UTILS
+            navigate(view) {
+                document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden-section'));
+                document.getElementById('view-' + view).classList.remove('hidden-section');
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     btn.classList.remove('bg-blue-600/20', 'text-blue-400', 'border-blue-600/20');
-                    if (btn.getAttribute('onclick')?.includes(view)) {
-                        btn.classList.add('bg-blue-600/20', 'text-blue-400', 'border-blue-600/20');
-                    }
+                    btn.classList.add('text-slate-400');
                 });
+                event.currentTarget.classList.remove('text-slate-400');
+                event.currentTarget.classList.add('bg-blue-600/20', 'text-blue-400', 'border-blue-600/20');
                 
-                // Refresh data if needed
-                if (view === 'comptabilite') this.updateComptabilite();
+                if (view === 'stock') this.updateStockView();
+                if (view === 'vendeurs') this.updateVendorsView();
                 if (view === 'credits') this.updateCreditsView();
+            }
+
+            filterStock() {
+                this.updateStockView();
+            }
+
+            scanIMEI() {
+                document.getElementById('scanner-overlay').classList.remove('hidden');
+                // Simulation scan
+                setTimeout(() => {
+                    document.getElementById('scanner-overlay').classList.add('hidden');
+                    const fakeIMEI = '356938' + Math.floor(Math.random() * 1000000000);
+                    document.getElementById('modal-add-product').querySelector('[name="imei"]').value = fakeIMEI;
+                    this.openModal('modal-add-product');
+                }, 3000);
+            }
+
+            copyCode() {
+                const code = document.getElementById('generated-code-display').textContent;
+                navigator.clipboard.writeText(code);
+                alert('Code copié: ' + code);
             }
 
             formatCFA(num) {
                 return new Intl.NumberFormat('fr-FR').format(num || 0) + ' CFA';
             }
 
-            showToast(msg, type = 'info') {
-                console.log(`[${type}] ${msg}`);
-                // Implémentation simple d'alerte, à remplacer par un vrai toast UI
-                if (type === 'error') alert('Erreur: ' + msg);
-            }
-
-            updateSyncStatus(status) {
-                const bar = document.getElementById('sync-progress');
-                if (status === 'synced') {
-                    bar.style.width = '100%';
-                    setTimeout(() => bar.style.opacity = '0', 500);
-                }
-            }
-
             showMainApp() {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('sidebar-username').textContent = this.profile.nom || this.user.email;
             }
 
             showLogin() {
@@ -1165,74 +943,36 @@
                 document.getElementById('main-app').classList.add('hidden');
             }
 
+            openModal(id) {
+                document.getElementById(id).classList.remove('hidden');
+            }
+
             closeModal(id) {
                 document.getElementById(id).classList.add('hidden');
             }
 
-            updatePeriod(period) {
-                // TODO: Implement period filtering
-                console.log('Period changed to:', period);
+            showModal(id) {
+                this.openModal(id);
             }
 
-            exportReport() {
-                // Export CSV simple
-                let csv = 'Date,Produit,Montant,Vendeur,Client\n';
-                this.data.ventes.forEach(v => {
-                    const date = v.timestamp?.toDate().toLocaleDateString('fr-FR');
-                    const produits = v.produits?.map(p => p.modele).join(' ');
-                    csv += `${date},${produits},${v.montant},${v.vendeurNom},${v.client?.nom}\n`;
+            exportData() {
+                let csv = 'IMEI,Modele,Prix Achat,Prix Vente,Statut\n';
+                this.data.products.forEach(p => {
+                    csv += `${p.imei},${p.modele},${p.prixAchat},${p.prixVente},${p.sold ? 'Vendu' : 'Stock'}\n`;
                 });
-                
                 const blob = new Blob([csv], {type: 'text/csv'});
-                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `rapport-${new Date().toISOString().split('T')[0]}.csv`;
+                a.href = URL.createObjectURL(blob);
+                a.download = 'stock.csv';
                 a.click();
             }
 
-            generateGrandLivre() {
-                this.showToast('Génération du Grand Livre PDF...', 'info');
-                // TODO: Implement PDF generation with jsPDF
-            }
-
-            exportComptaExcel() {
-                this.exportReport();
-            }
-
-            filterCompta() {
-                // TODO: Implement date filtering
-                this.updateComptabilite();
-            }
-
-            rembourserCredit(id) {
-                const montant = prompt('Montant du remboursement (CFA):');
-                if (montant && !isNaN(montant)) {
-                    // Update credit logic
-                    const credit = this.data.credits.find(c => c.id === id);
-                    if (credit) {
-                        const nouveauRestant = (credit.montantRestant || credit.montant) - parseInt(montant);
-                        this.db.collection('credits').doc(id).update({
-                            montantRestant: Math.max(0, nouveauRestant),
-                            statut: nouveauRestant <= 0 ? 'solde' : 'partiel',
-                            dernierRemboursement: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                }
+            filterPeriod(periode) {
+                alert('Filtre: ' + periode);
             }
         }
 
-        // Démarrer l'application
-        const app = new PhoneStockExpert();
-
-        // Helper pour les dates par défaut
-        window.addEventListener('load', () => {
-            const today = new Date().toISOString().split('T')[0];
-            const start = new Date();
-            start.setMonth(start.getMonth() - 1);
-            document.getElementById('compta-end') && (document.getElementById('compta-end').value = today);
-            document.getElementById('compta-start') && (document.getElementById('compta-start').value = start.toISOString().split('T')[0]);
-        });
+        const app = new PhoneStockApp();
     </script>
 </body>
 </html>
